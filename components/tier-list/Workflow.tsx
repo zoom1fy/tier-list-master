@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card } from "./Card";
 import { Line } from "./Line";
 import { ImageUpload } from "./ImageUpload";
@@ -63,9 +63,22 @@ export function Workflow() {
     );
   };
 
+  const handleRename = (rowId: string, newName: string) => {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === rowId ? { ...r, name: newName, label: newName } : r,
+      ),
+    );
+  };
+
   const addToPool = (item: TierItem) => {
     setPool((prev) => [...prev, item]);
   };
+
+  const labelWidth = useMemo(() => {
+    const maxLen = Math.max(...rows.map((r) => r.label.length), 1);
+    return maxLen * 11 + 32;
+  }, [rows]);
 
   const handleDropOnRow = (e: React.DragEvent, rowId: string) => {
     e.preventDefault();
@@ -137,6 +150,8 @@ export function Workflow() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDropOnRow(e, row.id)}
             onDragStart={(e, item) => handleDragStart(e, item)}
+            onRename={handleRename}
+            labelWidth={labelWidth}
             data-row-id={row.id}
           />
         ))}

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Line } from "../tier-list/Line";
 import type { TierRow } from "@/types/TierRow";
 
@@ -38,6 +39,28 @@ it("forwards data-row-id attribute", () => {
     />,
   );
   expect(container.firstChild).toHaveAttribute("data-row-id", "s");
+});
+
+it("calls onRename when label is edited", async () => {
+  const onRename = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <Line
+      row={row}
+      onDragOver={vi.fn()}
+      onDrop={vi.fn()}
+      onDragStart={vi.fn()}
+      onRename={onRename}
+    />,
+  );
+
+  await user.click(screen.getByRole("button", { name: "S" }));
+  const input = screen.getByRole("textbox");
+  await user.clear(input);
+  await user.type(input, "SS");
+  await user.tab();
+
+  expect(onRename).toHaveBeenCalledWith("s", "SS");
 });
 
 it("renders empty items list", () => {

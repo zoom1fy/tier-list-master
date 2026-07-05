@@ -3,7 +3,7 @@
 import domtoimage from "dom-to-image-more";
 import { Header } from "@/components/Header";
 import { WorkflowWrapper } from "@/components/WorkflowWrapper";
-import { Home as HomeIcon, Info, CirclePlus, Fullscreen } from "lucide-react";
+import { GitFork, Info, CirclePlus, Fullscreen } from "lucide-react";
 
 export default function Home() {
   const handleScreenshot = async () => {
@@ -28,7 +28,11 @@ export default function Home() {
       ctx.font = `${Math.round(img.width / 40)}px sans-serif`;
       ctx.textAlign = "right";
       ctx.textBaseline = "bottom";
-      ctx.fillText("github.com/zoom1fy/tier-list-master", img.width - 16, img.height - 16);
+      ctx.fillText(
+        "github.com/zoom1fy/tier-list-master",
+        img.width - 16,
+        img.height - 16,
+      );
 
       const date = new Date().toISOString().slice(0, 10);
       const link = document.createElement("a");
@@ -45,8 +49,6 @@ export default function Home() {
         logoText="TierListMaster"
         logoHref="/"
         navItems={[
-          { label: "Main", href: "/", icon: <HomeIcon size={18} /> },
-          { label: "About", href: "/about", icon: <Info size={18} /> },
           {
             label: "Create new",
             href: "/services",
@@ -57,6 +59,8 @@ export default function Home() {
             icon: <Fullscreen size={18} />,
             onClick: handleScreenshot,
           },
+          { label: "Github", href: "https://zoom1fy.github.io/tier-list-master/", icon: <GitFork size={18} /> },
+          { label: "About", href: "/about", icon: <Info size={18} /> },
         ]}
       />
 
