@@ -19,9 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - uses: oven-sh/setup-bun@v2
       - id: configure-pages
         uses: actions/configure-pages@v5
         with:
@@ -29,11 +27,11 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package.json') }}-${{ hashFiles('app/**/*.{ts,tsx}', 'public/**/*') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('bun.lock') }}-${{ hashFiles('app/**/*.{ts,tsx}', 'public/**/*') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('package.json') }}-
-      - run: npm ci
-      - run: npm run build
+            ${{ runner.os }}-nextjs-${{ hashFiles('bun.lock') }}-
+      - run: bun install --frozen-lockfile
+      - run: bun run build
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.configure-pages.outputs.base_path }}
       - name: Upload artifact
