@@ -52,6 +52,8 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
                 <a
                   key={item.href}
                   href={item.href}
+                  target={item.href?.startsWith("http") ? "_blank" : undefined}
+                  rel={item.href?.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 >
                   {item.icon}
@@ -82,6 +84,8 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
                     render={
                       <a
                         href={item.href ?? "#"}
+                        target={item.href?.startsWith("http") ? "_blank" : undefined}
+                        rel={item.href?.startsWith("http") ? "noopener noreferrer" : undefined}
                         onClick={item.onClick}
                         className="inline-flex items-center gap-2 h-10 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                       />

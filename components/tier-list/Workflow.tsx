@@ -21,9 +21,22 @@ const initialPool: TierItem[] = [];
 export function Workflow() {
   const [rows, setRows] = useState<TierRow[]>(defaultRows);
   const [pool, setPool] = useState<TierItem[]>(initialPool);
+  const [dragging, setDragging] = useState(false);
+
+  const removeItem = (itemId: string) => {
+    setPool((p) => p.filter((i) => i.id !== itemId));
+    setRows((prev) =>
+      prev.map((r) => ({ ...r, items: r.items.filter((i) => i.id !== itemId) })),
+    );
+  };
 
   const handleDragStart = (e: React.DragEvent, item: TierItem) => {
     e.dataTransfer.setData("text/plain", item.id);
+    setDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setDragging(false);
   };
 
   const moveToRow = (itemId: string, rowId: string) => {
@@ -82,6 +95,7 @@ export function Workflow() {
 
   const handleDropOnRow = (e: React.DragEvent, rowId: string) => {
     e.preventDefault();
+    setDragging(false);
     moveToRow(e.dataTransfer.getData("text/plain"), rowId);
   };
 
@@ -91,6 +105,7 @@ export function Workflow() {
 
   const handleTouchStart = (e: React.TouchEvent, item: TierItem) => {
     dragItemId.current = item.id;
+    setDragging(true);
 
     const touch = e.touches[0];
     const ghost = document.createElement("div");
@@ -110,6 +125,7 @@ export function Workflow() {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    setDragging(false);
     if (ghostRef.current) {
       ghostRef.current.remove();
       ghostRef.current = null;
@@ -122,6 +138,12 @@ export function Workflow() {
     const touch = e.changedTouches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!target) return;
+
+    const trashEl = target.closest("[data-trash-zone]");
+    if (trashEl) {
+      removeItem(id);
+      return;
+    }
 
     const rowEl = target.closest("[data-row-id]");
     if (rowEl) {
@@ -136,12 +158,35 @@ export function Workflow() {
     }
   };
 
+  const handleDropOnPool = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    moveToPool(e.dataTransfer.getData("text/plain"));
+  };
+
+  const handleDropOnTrash = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    removeItem(e.dataTransfer.getData("text/plain"));
+  };
+
   return (
     <div
       className="flex flex-col lg:flex-row gap-4 items-start"
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onDragEnd={handleDragEnd}
     >
+      <div
+        data-trash-zone
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-destructive bg-destructive/10 text-destructive text-sm font-medium backdrop-blur-sm transition-all duration-200 ${dragging ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-2 pointer-events-none"}`}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDropOnTrash}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        Drop here to delete
+      </div>
+
       <div id="tier-list" className="flex flex-col gap-2 flex-3 min-w-0 w-full">
         {rows.map((row) => (
           <Line
@@ -164,10 +209,7 @@ export function Workflow() {
           data-drop-zone
           className="flex flex-wrap gap-2 p-4 rounded-xl border-2 border-dashed border-card-border bg-card min-h-20"
           onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            moveToPool(e.dataTransfer.getData("text/plain"));
-          }}
+          onDrop={handleDropOnPool}
         >
           <span className="text-xs text-muted-foreground w-full">
             Unassigned ({pool.length})

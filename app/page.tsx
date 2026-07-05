@@ -147,6 +147,14 @@ export default function Home() {
                   Use <strong>Create new</strong> to reset all tiers. A confirmation dialog prevents accidents.
                 </p>
               </div>
+
+              <div className="p-3 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <p className="font-medium mb-1">Note</p>
+                <p>
+                  Tier List Master is an open-source static site. Your data is stored only in your browser's memory —
+                  refreshing the page will clear everything. This is by design: your images never leave your device.
+                </p>
+              </div>
             </div>
         </DialogContent>
       </Dialog>
