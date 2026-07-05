@@ -129,7 +129,7 @@ export function Workflow() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex flex-col gap-2 flex-3 min-w-0 w-full">
+      <div id="tier-list" className="flex flex-col gap-2 flex-3 min-w-0 w-full">
         {rows.map((row) => (
           <Line
             key={row.id}
@@ -147,7 +147,7 @@ export function Workflow() {
 
         <div
           data-drop-zone
-          className="flex flex-wrap gap-2 p-4 rounded-xl border-2 border-dashed border-card-border bg-card min-h-[80px]"
+          className="flex flex-wrap gap-2 p-4 rounded-xl border-2 border-dashed border-card-border bg-card min-h-20"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();

@@ -13,8 +13,9 @@ import {
 
 type NavItem = {
   label: string;
-  href: string;
+  href?: string;
   icon?: React.ReactNode;
+  onClick?: () => void;
 };
 
 type HeaderProps = {
@@ -36,16 +37,28 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
           </a>
 
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-              >
-                {item.icon}
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) =>
+              item.onClick ? (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={item.onClick}
+                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ) : (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  {item.icon}
+                  {item.label}
+                </a>
+              )
+            )}
           </nav>
         </div>
 
@@ -65,10 +78,11 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
               <nav className="flex flex-col gap-1 mt-6">
                 {navItems.map((item) => (
                   <SheetClose
-                    key={item.href}
+                    key={item.href ?? item.label}
                     render={
                       <a
-                        href={item.href}
+                        href={item.href ?? "#"}
+                        onClick={item.onClick}
                         className="inline-flex items-center gap-2 h-10 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                       />
                     }

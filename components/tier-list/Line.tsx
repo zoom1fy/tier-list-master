@@ -20,10 +20,10 @@ export function Line({ row, onDragOver, onDrop, onDragStart, ...rest }: LineProp
       onDrop={onDrop}
       {...rest}
     >
-      <div className={`flex items-center justify-center w-16 min-h-[72px] ${row.backgroundColorClass} text-lg font-bold shrink-0`}>
+      <div className={`flex items-center justify-center w-16 min-h-18 ${row.backgroundColorClass} text-lg font-bold shrink-0`}>
         {row.label}
       </div>
-      <div className="flex flex-wrap gap-2 p-2 bg-card flex-1 min-h-[72px]">
+      <div className="flex flex-wrap gap-2 p-2 bg-card flex-1 min-h-18">
         {row.items.map((item: TierItem) => (
           <Card key={item.id} item={item} draggable onDragStart={(e) => onDragStart(e, item)} />
         ))}
