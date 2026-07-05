@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+[**Русский**](./README.ru.md)
+
+# Tier List Master
+
+> **Drag-and-drop tier list builder.** Create, customize, and export tier lists — entirely in your browser. No uploads, no servers, no tracking.
+
+[**Live Demo**](https://zoom1fy.github.io/tier-list-master/)
+
+---
+
+## Features
+
+- **Drag & drop** — mouse and touch support. Move items between tiers, back to the pool, or drop on the trash zone to delete.
+- **Image upload** — paste any image URL or upload a file from your device. Nothing leaves your browser.
+- **Custom tiers** — rename any tier label (up to 15 chars). Layout adjusts automatically.
+- **Screenshot export** — save your tier list as a high-res PNG with a built-in watermark.
+- **Trash zone** — a delete area appears when dragging. Drop items there to remove them.
+- **Fully static** — zero backend. Your images stay on your device. Refresh clears everything.
+- **Open source** — built with Next.js, React, TypeScript, Tailwind CSS.
+
+## Tech Stack
+
+[Next.js](https://nextjs.org/) 16 · [React](https://react.dev/) 19 · [TypeScript](https://www.typescriptlang.org/) · [Tailwind CSS](https://tailwindcss.com/) v4 · [Vitest](https://vitest.dev/) · [Base UI](https://base-ui.com/) · [dom-to-image-more](https://github.com/1904labs/dom-to-image-more)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- npm / bun / pnpm / yarn
+
+### Install & Run
 
 ```bash
+git clone https://github.com/zoom1fy/tier-list-master.git
+cd tier-list-master
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build (static export) |
+| `npm start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run tests (Vitest) |
+| `npm run test:watch` | Run tests in watch mode |
 
-## Learn More
+### Build
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Static files are written to `out/`. Deploy anywhere — GitHub Pages, Vercel, Cloudflare Pages, etc.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+app/               — App router pages
+components/        — UI components
+  tier-list/       — Tier list core (Workflow, Card, Line, ImageUpload)
+  ui/              — Design system (button, dialog, sheet, etc.)
+lib/               — Utilities
+types/             — TypeScript types
+tests/             — Test setup
+public/            — Static assets
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Issues and PRs are welcome. Make sure tests pass before submitting:
+
+```bash
+npm test
+```
+
+---
+
+<p align="center">
+  <sub>Built with Next.js · Designed by <a href="https://x.com/mipublicita">@mipublicita</a></sub>
+</p>
