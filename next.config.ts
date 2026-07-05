@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
-  basePath: process.env.NODE_ENV === "production" ? "/tier-lisr-master" : "",
+  basePath: process.env.PAGES_BASE_PATH || process.env.NEXT_PUBLIC_BASE_PATH || "",
   images: {
     unoptimized: true,
   },
