@@ -16,7 +16,28 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
   const [url, setUrl] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const validateImage = (src: string) => {
+    const img = new window.Image();
+    img.onload = () => {
+      setError(null);
+    };
+    img.onerror = () => {
+      setPreview(null);
+      setError("Failed to load image. Check the URL or file.");
+    };
+    img.src = src;
+  };
+
+  const handleUrlLoad = () => {
+    if (!url.trim()) return;
+    setError(null);
+    setPreview(url.trim());
+    setName("");
+    validateImage(url.trim());
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,14 +47,9 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
     reader.onload = () => {
       setPreview(reader.result as string);
       setName("");
+      setError(null);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleUrlLoad = () => {
-    if (!url.trim()) return;
-    setPreview(url.trim());
-    setName((prev) => prev || url.split("/").pop()?.split(".")[0] || "Image");
   };
 
   const handleAdd = () => {
@@ -47,6 +63,7 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
     setUrl("");
     setPreview(null);
     setName("");
+    setError(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -82,6 +99,10 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
         <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
           Choose image
         </Button>
+
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
 
         {preview && (
           <div className="flex items-center gap-3 p-3 rounded-lg bg-background border border-card-border">

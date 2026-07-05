@@ -43,7 +43,7 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
                   key={item.label}
                   type="button"
                   onClick={item.onClick}
-                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
                 >
                   {item.icon}
                   {item.label}
