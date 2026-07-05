@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -69,7 +68,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header
         logoText="TierListMaster"
-        logoHref="/"
+        logoHref="https://github.com/zoom1fy/tier-list-master"
         navItems={[
           {
             label: "Create new",
@@ -81,8 +80,16 @@ export default function Home() {
             icon: <Fullscreen size={18} />,
             onClick: handleScreenshot,
           },
-          { label: "Github", href: "https://zoom1fy.github.io/tier-list-master/", icon: <GitFork size={18} /> },
-          { label: "About", icon: <Info size={18} />, onClick: () => setAboutOpen(true) },
+          {
+            label: "Github",
+            href: "https://github.com/zoom1fy/tier-list-master/",
+            icon: <GitFork size={18} />,
+          },
+          {
+            label: "About",
+            icon: <Info size={18} />,
+            onClick: () => setAboutOpen(true),
+          },
         ]}
       />
 
@@ -117,45 +124,54 @@ export default function Home() {
             <DialogTitle>How to Use Tier List Master</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 text-sm text-muted-foreground">
-              <div className="p-3 rounded-lg border border-card-border bg-card">
-                <p className="font-medium text-foreground mb-1">1. Add Items</p>
-                <p>
-                  Paste an image URL or upload a file from the right panel. Give each item a name before adding.
-                </p>
-              </div>
-              <div className="p-3 rounded-lg border border-card-border bg-card">
-                <p className="font-medium text-foreground mb-1">2. Drag & Drop</p>
-                <p>
-                  Drag items into any tier row. Works with mouse and touch. Move items between tiers or back to the pool.
-                </p>
-              </div>
-              <div className="p-3 rounded-lg border border-card-border bg-card">
-                <p className="font-medium text-foreground mb-1">3. Customize Tiers</p>
-                <p>
-                  Click a tier label to rename it (up to 15 characters). All labels stay aligned automatically.
-                </p>
-              </div>
-              <div className="p-3 rounded-lg border border-card-border bg-card">
-                <p className="font-medium text-foreground mb-1">4. Screenshot</p>
-                <p>
-                  Click <strong>Make screenshot</strong> to save your tier list as PNG with a watermark.
-                </p>
-              </div>
-              <div className="p-3 rounded-lg border border-card-border bg-card">
-                <p className="font-medium text-foreground mb-1">5. Start Over</p>
-                <p>
-                  Use <strong>Create new</strong> to reset all tiers. A confirmation dialog prevents accidents.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <p className="font-medium mb-1">Note</p>
-                <p>
-                  Tier List Master is an open-source static site. Your data is stored only in your browser's memory —
-                  refreshing the page will clear everything. This is by design: your images never leave your device.
-                </p>
-              </div>
+            <div className="p-3 rounded-lg border border-card-border bg-card">
+              <p className="font-medium text-foreground mb-1">1. Add Items</p>
+              <p>
+                Paste an image URL or upload a file from the right panel. Give
+                each item a name before adding.
+              </p>
             </div>
+            <div className="p-3 rounded-lg border border-card-border bg-card">
+              <p className="font-medium text-foreground mb-1">2. Drag & Drop</p>
+              <p>
+                Drag items into any tier row. Works with mouse and touch. Move
+                items between tiers or back to the pool.
+              </p>
+            </div>
+            <div className="p-3 rounded-lg border border-card-border bg-card">
+              <p className="font-medium text-foreground mb-1">
+                3. Customize Tiers
+              </p>
+              <p>
+                Click a tier label to rename it (up to 15 characters). All
+                labels stay aligned automatically.
+              </p>
+            </div>
+            <div className="p-3 rounded-lg border border-card-border bg-card">
+              <p className="font-medium text-foreground mb-1">4. Screenshot</p>
+              <p>
+                Click <strong>Make screenshot</strong> to save your tier list as
+                PNG with a watermark.
+              </p>
+            </div>
+            <div className="p-3 rounded-lg border border-card-border bg-card">
+              <p className="font-medium text-foreground mb-1">5. Start Over</p>
+              <p>
+                Use <strong>Create new</strong> to reset all tiers. A
+                confirmation dialog prevents accidents.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <p className="font-medium mb-1">Note</p>
+              <p>
+                Tier List Master is an open-source static site. Your data is
+                stored only in your browser's memory — refreshing the page will
+                clear everything. This is by design: your images never leave
+                your device.
+              </p>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
