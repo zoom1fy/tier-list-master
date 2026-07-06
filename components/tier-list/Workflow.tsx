@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "./Card";
 import { Line } from "./Line";
 import { ImageUpload } from "./ImageUpload";
+import {
+  deleteBlob,
+  loadBlob,
+  loadStructure,
+  saveStructure,
+} from "@/lib/persistence";
 import type { TierRow } from "@/types/TierRow";
 import type { TierItem } from "@/types/TierItem";
 
@@ -16,18 +22,108 @@ const defaultRows: TierRow[] = [
   { id: "f", name: "F", label: "F", backgroundColorClass: "tier-f", items: [] },
 ];
 
-const initialPool: TierItem[] = [];
+async function restoreState(urls: Set<string>): Promise<{ rows: TierRow[]; pool: TierItem[] }> {
+  const saved = loadStructure();
+  if (!saved) return { rows: defaultRows, pool: [] };
+
+  const restoreItem = async (item: TierItem): Promise<TierItem> => {
+    if (!item.blobKey) return item;
+    const blob = await loadBlob(item.blobKey);
+    if (!blob) return { ...item, blobKey: undefined };
+    const url = URL.createObjectURL(blob);
+    urls.add(url);
+    return { ...item, imageUrl: url };
+  };
+
+  const pool: TierItem[] = await Promise.all(saved.pool.map(restoreItem));
+  const rows: TierRow[] = await Promise.all(
+    saved.rows.map(async (r) => ({
+      ...r,
+      items: await Promise.all(r.items.map(restoreItem)),
+    })),
+  );
+
+  return { rows, pool };
+}
+
+const SAVE_DEBOUNCE = 500;
 
 export function Workflow() {
   const [rows, setRows] = useState<TierRow[]>(defaultRows);
-  const [pool, setPool] = useState<TierItem[]>(initialPool);
+  const [pool, setPool] = useState<TierItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const objectUrls = useRef<Set<string>>(new Set());
 
-  const removeItem = (itemId: string) => {
-    setPool((p) => p.filter((i) => i.id !== itemId));
-    setRows((prev) =>
-      prev.map((r) => ({ ...r, items: r.items.filter((i) => i.id !== itemId) })),
-    );
+  useEffect(() => {
+    restoreState(objectUrls.current).then((state) => {
+      setRows(state.rows);
+      setPool(state.pool);
+      setLoading(false);
+    });
+    return () => {
+      clearTimeout(saveTimer.current);
+      objectUrls.current.forEach((u) => URL.revokeObjectURL(u));
+      objectUrls.current.clear();
+    };
+  }, []);
+
+  const persist = () => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      setRows((currentRows) => {
+        setPool((currentPool) => {
+          saveStructure({
+            pool: currentPool.map(({ id, name, imageUrl, tier, blobKey }) => ({
+              id, name, imageUrl, tier, blobKey,
+            })),
+            rows: currentRows.map((r) => ({
+              ...r,
+              items: r.items.map(({ id, name, imageUrl, tier, blobKey }) => ({
+                id, name, imageUrl, tier, blobKey,
+              })),
+            })),
+          });
+          return currentPool;
+        });
+        return currentRows;
+      });
+    }, SAVE_DEBOUNCE);
+  };
+
+  const removeItem = async (itemId: string) => {
+    let blobKey: string | undefined;
+    let imageUrl: string | undefined;
+
+    setPool((p) => {
+      const item = p.find((i) => i.id === itemId);
+      if (item) {
+        blobKey = item.blobKey;
+        imageUrl = item.imageUrl;
+      }
+      return p.filter((i) => i.id !== itemId);
+    });
+    setRows((prev) => {
+      for (const row of prev) {
+        const item = row.items.find((i) => i.id === itemId);
+        if (item) {
+          blobKey = item.blobKey;
+          imageUrl = item.imageUrl;
+          break;
+        }
+      }
+      return prev.map((r) => ({ ...r, items: r.items.filter((i) => i.id !== itemId) }));
+    });
+
+    if (imageUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(imageUrl);
+      objectUrls.current.delete(imageUrl);
+    }
+    if (blobKey) {
+      await deleteBlob(blobKey);
+    }
+    persist();
   };
 
   const handleDragStart = (e: React.DragEvent, item: TierItem) => {
@@ -57,6 +153,7 @@ export function Workflow() {
             : r.items.filter((i) => i.id !== itemId),
       })),
     );
+    persist();
   };
 
   const moveToPool = (itemId: string) => {
@@ -74,6 +171,7 @@ export function Workflow() {
         items: r.items.filter((i) => i.id !== itemId),
       })),
     );
+    persist();
   };
 
   const handleRename = (rowId: string, newName: string) => {
@@ -82,10 +180,12 @@ export function Workflow() {
         r.id === rowId ? { ...r, name: newName, label: newName } : r,
       ),
     );
+    persist();
   };
 
   const addToPool = (item: TierItem) => {
     setPool((prev) => [...prev, item]);
+    persist();
   };
 
   const labelWidth = useMemo(() => {
@@ -169,6 +269,14 @@ export function Workflow() {
     setDragging(false);
     removeItem(e.dataTransfer.getData("text/plain"));
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        Restoring your tier list...
+      </div>
+    );
+  }
 
   return (
     <div

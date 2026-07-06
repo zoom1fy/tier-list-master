@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +20,60 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Header } from "@/components/Header";
 import { WorkflowWrapper } from "@/components/WorkflowWrapper";
-import { GitFork, Info, CirclePlus, Fullscreen } from "lucide-react";
+import { GitFork, Info, CirclePlus, Fullscreen, Download, Upload } from "lucide-react";
+import { clearAllBlobs, clearStructure, exportTierList, importTierList } from "@/lib/persistence";
 
 export default function Home() {
   const [resetKey, setResetKey] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+  const pendingImport = useRef<{ text: string } | null>(null);
+
+  const handleSave = async () => {
+    try {
+      const payload = await exportTierList();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.download = `tierlist-${payload.meta.exportedAt.slice(0, 10)}.json`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(e.message ?? "Export failed");
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const hasData = localStorage.getItem("tier-list-structure");
+    const text = await file.text();
+    if (importRef.current) importRef.current.value = "";
+
+    if (hasData) {
+      try {
+        JSON.parse(text);
+      } catch {
+        alert("Invalid tier list file");
+        return;
+      }
+      pendingImport.current = { text };
+      setImportConfirmOpen(true);
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(text);
+      await importTierList(payload);
+      setResetKey((k) => k + 1);
+    } catch {
+      alert("Invalid tier list file");
+    }
+  };
 
   const handleScreenshot = async () => {
     const el = document.getElementById("tier-list");
@@ -81,6 +129,16 @@ export default function Home() {
             onClick: handleScreenshot,
           },
           {
+            label: "Save",
+            icon: <Download size={18} />,
+            onClick: handleSave,
+          },
+          {
+            label: "Load",
+            icon: <Upload size={18} />,
+            onClick: () => importRef.current?.click(),
+          },
+          {
             label: "Github",
             href: "https://github.com/zoom1fy/tier-list-master/",
             icon: <GitFork size={18} />,
@@ -107,12 +165,45 @@ export default function Home() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
+                await clearAllBlobs();
+                clearStructure();
                 setResetKey((k) => k + 1);
                 setConfirmOpen(false);
               }}
             >
               Yes, start over
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Load this file?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your current tier list will be replaced.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setImportConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!pendingImport.current) return;
+                try {
+                  const payload = JSON.parse(pendingImport.current.text);
+                  await importTierList(payload);
+                  setResetKey((k) => k + 1);
+                } catch {
+                  alert("Invalid tier list file");
+                }
+                setImportConfirmOpen(false);
+              }}
+            >
+              Load
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -162,18 +253,17 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="p-3 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <p className="font-medium mb-1">Note</p>
-              <p>
-                Tier List Master is an open-source static site. Your data is
-                stored only in your browser's memory — refreshing the page will
-                clear everything. This is by design: your images never leave
-                your device.
-              </p>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <input
+        ref={importRef}
+        type="file"
+        accept=".json"
+        onChange={handleImport}
+        className="hidden"
+      />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-20">
         <WorkflowWrapper key={resetKey} />

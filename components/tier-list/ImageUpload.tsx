@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { saveBlob } from "@/lib/persistence";
 import type { TierItem } from "@/types/TierItem";
 
 type ImageUploadProps = {
@@ -17,7 +18,9 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isFile, setIsFile] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileBlobRef = useRef<Blob | null>(null);
 
   const validateImage = (src: string) => {
     const img = new window.Image();
@@ -36,34 +39,50 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
     setError(null);
     setPreview(url.trim());
     setName("");
+    setIsFile(false);
+    fileBlobRef.current = null;
     validateImage(url.trim());
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    fileBlobRef.current = file;
 
     const reader = new FileReader();
     reader.onload = () => {
       setPreview(reader.result as string);
       setName("");
       setError(null);
+      setIsFile(true);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!preview) return;
+
+    const id = String(nextId++);
+    let blobKey: string | undefined;
+
+    if (isFile && fileBlobRef.current) {
+      blobKey = `blob-${id}`;
+      await saveBlob(blobKey, fileBlobRef.current);
+      fileBlobRef.current = null;
+    }
+
     onAddItem({
-      id: String(nextId++),
+      id,
       name: name.trim(),
       imageUrl: preview,
       tier: "unassigned",
+      blobKey,
     });
     setUrl("");
     setPreview(null);
     setName("");
     setError(null);
+    setIsFile(false);
     if (fileRef.current) fileRef.current.value = "";
   };
 

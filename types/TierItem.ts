@@ -4,4 +4,5 @@ export interface TierItem {
   description?: string;
   imageUrl: string;
   tier: string;
+  blobKey?: string;
 }
