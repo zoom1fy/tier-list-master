@@ -265,7 +265,7 @@ export default function Home() {
         className="hidden"
       />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 pb-12 pt-20">
         <WorkflowWrapper key={resetKey} />
       </main>
     </div>

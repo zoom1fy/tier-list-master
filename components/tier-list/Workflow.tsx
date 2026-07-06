@@ -310,7 +310,7 @@ export function Workflow() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 w-full lg:w-96 shrink-0">
+      <div className="flex flex-col gap-3 w-full lg:w-120 shrink-0">
         <ImageUpload onAddItem={addToPool} />
 
         <div
