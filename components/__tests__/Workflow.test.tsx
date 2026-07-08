@@ -1,7 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Workflow } from "../tier-list/Workflow";
+import { saveStructure, clearStructure } from "@/lib/persistence";
 
-it("renders 6 tier rows", async () => {
+beforeEach(() => {
+  clearStructure();
+});
+
+it("renders 6 default tier rows", async () => {
   render(<Workflow />);
   await waitFor(() => {
     expect(screen.getByText("S")).toBeInTheDocument();
@@ -10,6 +16,45 @@ it("renders 6 tier rows", async () => {
     expect(screen.getByText("C")).toBeInTheDocument();
     expect(screen.getByText("D")).toBeInTheDocument();
     expect(screen.getByText("F")).toBeInTheDocument();
+  });
+});
+
+it("restores custom rows from saved state", async () => {
+  saveStructure({
+    pool: [],
+    rows: [
+      { id: "x", name: "X", label: "X", backgroundColorClass: "tier-s", items: [] },
+      { id: "y", name: "Y", label: "Y", backgroundColorClass: "tier-a", items: [] },
+      { id: "z", name: "Z", label: "Z", backgroundColorClass: "tier-b", items: [] },
+    ],
+  });
+
+  render(<Workflow />);
+  await waitFor(() => {
+    expect(screen.getByText("X")).toBeInTheDocument();
+    expect(screen.getByText("Y")).toBeInTheDocument();
+    expect(screen.getByText("Z")).toBeInTheDocument();
+  });
+  expect(screen.queryByText("S")).not.toBeInTheDocument();
+  expect(screen.queryByText("F")).not.toBeInTheDocument();
+});
+
+it("preserves items in rows after restore", async () => {
+  saveStructure({
+    pool: [],
+    rows: [
+      {
+        id: "s", name: "S", label: "S", backgroundColorClass: "tier-s",
+        items: [
+          { id: "1", name: "TestItem", imageUrl: "https://example.com/img.png", tier: "S" },
+        ],
+      },
+    ],
+  });
+
+  render(<Workflow />);
+  await waitFor(() => {
+    expect(screen.getByText("TestItem")).toBeInTheDocument();
   });
 });
 

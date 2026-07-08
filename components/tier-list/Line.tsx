@@ -12,11 +12,12 @@ type LineProps = {
   onDragStart: (e: React.DragEvent, item: TierItem) => void;
   onRename?: (rowId: string, newName: string) => void;
   onRemove?: (rowId: string) => void;
+  isRemoving?: boolean;
   labelWidth?: number;
   "data-row-id"?: string;
 };
 
-export function Line({ row, onDragOver, onDrop, onDragStart, onRename, onRemove, labelWidth, ...rest }: LineProps) {
+export function Line({ row, onDragOver, onDrop, onDragStart, onRename, onRemove, isRemoving, labelWidth, ...rest }: LineProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(row.label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +43,7 @@ export function Line({ row, onDragOver, onDrop, onDragStart, onRename, onRemove,
 
   return (
     <div
-      className="flex items-stretch gap-0 rounded-xl overflow-hidden border border-card-border"
+      className={`fade-in ${isRemoving ? "fade-out" : ""} flex items-stretch gap-0 rounded-xl overflow-hidden border border-card-border`}
       onDragOver={onDragOver}
       onDrop={onDrop}
       {...rest}
@@ -75,7 +76,7 @@ export function Line({ row, onDragOver, onDrop, onDragStart, onRename, onRemove,
           <button
             type="button"
             onClick={() => onRemove(row.id)}
-            className="absolute top-0.5 right-0.5 text-xs leading-none opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-black/20 rounded-full size-4 flex items-center justify-center"
+            className="absolute top-0.5 right-0.5 text-xs leading-none opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-black/20 rounded-full size-4 flex items-center justify-center cursor-pointer"
           >
             ✕
           </button>

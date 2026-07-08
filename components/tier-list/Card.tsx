@@ -18,7 +18,7 @@ export function Card({ item, draggable = false, onDragStart, onTouchStart }: Car
       draggable={draggable}
       onDragStart={onDragStart}
       onTouchStart={onTouchStart ? (e) => onTouchStart(e, item) : undefined}
-      className="w-24 rounded-lg bg-card border border-card-border cursor-grab active:cursor-grabbing hover:shadow-sm transition-all overflow-hidden"
+      className="w-24 rounded-lg bg-card border border-card-border cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
     >
       {imageUrl && (
         <div className="aspect-square w-full overflow-hidden">

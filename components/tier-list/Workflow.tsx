@@ -10,6 +10,15 @@ import {
   loadStructure,
   saveStructure,
 } from "@/lib/persistence";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
 import type { TierRow } from "@/types/TierRow";
 import type { TierItem } from "@/types/TierItem";
 
@@ -53,6 +62,8 @@ export function Workflow() {
   const [pool, setPool] = useState<TierItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [removingRows, setRemovingRows] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const objectUrls = useRef<Set<string>>(new Set());
 
@@ -197,16 +208,34 @@ export function Workflow() {
     persist();
   };
 
+  const doRemoveRow = (rowId: string) => {
+    setRemovingRows((prev) => new Set(prev).add(rowId));
+    setTimeout(() => {
+      setRows((prev) => {
+        const target = prev.find((r) => r.id === rowId);
+        if (target && target.items.length > 0) {
+          setPool((p) => [...p.filter((i) => !target.items.some((ti) => ti.id === i.id)), ...target.items.map((i) => ({ ...i, tier: "unassigned" } as TierItem))]);
+        }
+        return prev.filter((r) => r.id !== rowId);
+      });
+      setRemovingRows((prev) => {
+        const next = new Set(prev);
+        next.delete(rowId);
+        return next;
+      });
+      persist();
+    }, 250);
+  };
+
   const removeRow = (rowId: string) => {
     if (rows.length <= 2) return;
-    setRows((prev) => {
-      const row = prev.find((r) => r.id === rowId);
-      if (row && row.items.length > 0) {
-        setPool((p) => [...p, ...row.items.map((i) => ({ ...i, tier: "unassigned" } as TierItem))]);
-      }
-      return prev.filter((r) => r.id !== rowId);
-    });
-    persist();
+    const row = rows.find((r) => r.id === rowId);
+    if (!row) return;
+    if (row.items.length > 0) {
+      setDeleteConfirm(rowId);
+    } else {
+      doRemoveRow(rowId);
+    }
   };
 
   const addToPool = (item: TierItem) => {
@@ -298,7 +327,7 @@ export function Workflow() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
+      <div className="flex items-center justify-center py-20 text-muted-foreground pulse-subtle">
         Restoring your tier list...
       </div>
     );
@@ -322,15 +351,6 @@ export function Workflow() {
       </div>
 
       <div id="tier-list" className="flex flex-col gap-2 flex-3 min-w-0 w-full">
-        {rows.length < 10 && (
-          <button
-            type="button"
-            onClick={addRow}
-            className="flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 border-dashed border-card-border bg-card/30 text-sm text-muted-foreground hover:text-foreground hover:bg-card/60 transition-all cursor-pointer"
-          >
-            Add tier
-          </button>
-        )}
         {rows.map((row) => (
           <Line
             key={row.id}
@@ -340,6 +360,7 @@ export function Workflow() {
             onDragStart={(e, item) => handleDragStart(e, item)}
             onRename={handleRename}
             onRemove={rows.length > 2 ? removeRow : undefined}
+            isRemoving={removingRows.has(row.id)}
             labelWidth={labelWidth}
             data-row-id={row.id}
           />
@@ -348,6 +369,17 @@ export function Workflow() {
 
       <div className="flex flex-col gap-3 w-full lg:w-120 shrink-0">
         <ImageUpload onAddItem={addToPool} />
+
+        {rows.length < 10 && (
+          <button
+            type="button"
+            onClick={addRow}
+            className="slide-down flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 border-dashed border-card-border bg-card/30 text-sm text-muted-foreground hover:text-foreground hover:bg-card/60 transition-all cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Add tier
+          </button>
+        )}
 
         <div
           data-drop-zone
@@ -362,10 +394,35 @@ export function Workflow() {
             <span className="text-sm text-muted-foreground">Add images above or drag items here from tiers</span>
           )}
           {pool.map((item) => (
-            <Card key={item.id} item={item} draggable onDragStart={(e) => handleDragStart(e, item)} onTouchStart={handleTouchStart} />
+            <div key={item.id} className="fade-in"><Card item={item} draggable onDragStart={(e) => handleDragStart(e, item)} onTouchStart={handleTouchStart} /></div>
           ))}
         </div>
       </div>
+
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(o) => { if (!o) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this tier?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Items will be moved to the pool.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteConfirm) doRemoveRow(deleteConfirm);
+                setDeleteConfirm(null);
+              }}
+            >
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
