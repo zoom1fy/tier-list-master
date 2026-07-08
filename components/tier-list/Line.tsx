@@ -11,11 +11,12 @@ type LineProps = {
   onDrop: (e: React.DragEvent) => void;
   onDragStart: (e: React.DragEvent, item: TierItem) => void;
   onRename?: (rowId: string, newName: string) => void;
+  onRemove?: (rowId: string) => void;
   labelWidth?: number;
   "data-row-id"?: string;
 };
 
-export function Line({ row, onDragOver, onDrop, onDragStart, onRename, labelWidth, ...rest }: LineProps) {
+export function Line({ row, onDragOver, onDrop, onDragStart, onRename, onRemove, labelWidth, ...rest }: LineProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(row.label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,9 +48,9 @@ export function Line({ row, onDragOver, onDrop, onDragStart, onRename, labelWidt
       {...rest}
     >
       <div
-        className={`flex items-center justify-center min-h-18 ${row.backgroundColorClass} text-lg font-bold shrink-0 transition-[width] duration-200`}
-        style={{ width: labelWidth || 64 }}
-      >
+          className={`relative group flex items-center justify-center min-h-18 ${row.backgroundColorClass} text-lg font-bold shrink-0 transition-[width] duration-200`}
+          style={{ width: labelWidth || 64 }}
+        >
         {editing ? (
           <input
             ref={inputRef}
@@ -68,6 +69,15 @@ export function Line({ row, onDragOver, onDrop, onDragStart, onRename, labelWidt
             className="cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none text-inherit text-lg font-bold"
           >
             {row.label}
+          </button>
+        )}
+        {onRemove && (
+          <button
+            type="button"
+            onClick={() => onRemove(row.id)}
+            className="absolute top-0.5 right-0.5 text-xs leading-none opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-black/20 rounded-full size-4 flex items-center justify-center"
+          >
+            ✕
           </button>
         )}
       </div>

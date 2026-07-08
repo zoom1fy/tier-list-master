@@ -183,6 +183,32 @@ export function Workflow() {
     persist();
   };
 
+  const rowIdCounter = useRef(100);
+  const tierColors = ["tier-s", "tier-a", "tier-b", "tier-c", "tier-d", "tier-f"];
+
+  const addRow = () => {
+    if (rows.length >= 10) return;
+    const id = String(rowIdCounter.current++);
+    const colorIdx = rows.length % tierColors.length;
+    setRows((prev) => [
+      ...prev,
+      { id, name: id, label: id, backgroundColorClass: tierColors[colorIdx], items: [] },
+    ]);
+    persist();
+  };
+
+  const removeRow = (rowId: string) => {
+    if (rows.length <= 2) return;
+    setRows((prev) => {
+      const row = prev.find((r) => r.id === rowId);
+      if (row && row.items.length > 0) {
+        setPool((p) => [...p, ...row.items.map((i) => ({ ...i, tier: "unassigned" } as TierItem))]);
+      }
+      return prev.filter((r) => r.id !== rowId);
+    });
+    persist();
+  };
+
   const addToPool = (item: TierItem) => {
     setPool((prev) => [...prev, item]);
     persist();
@@ -296,6 +322,15 @@ export function Workflow() {
       </div>
 
       <div id="tier-list" className="flex flex-col gap-2 flex-3 min-w-0 w-full">
+        {rows.length < 10 && (
+          <button
+            type="button"
+            onClick={addRow}
+            className="flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 border-dashed border-card-border bg-card/30 text-sm text-muted-foreground hover:text-foreground hover:bg-card/60 transition-all cursor-pointer"
+          >
+            Add tier
+          </button>
+        )}
         {rows.map((row) => (
           <Line
             key={row.id}
@@ -304,6 +339,7 @@ export function Workflow() {
             onDrop={(e) => handleDropOnRow(e, row.id)}
             onDragStart={(e, item) => handleDragStart(e, item)}
             onRename={handleRename}
+            onRemove={rows.length > 2 ? removeRow : undefined}
             labelWidth={labelWidth}
             data-row-id={row.id}
           />
