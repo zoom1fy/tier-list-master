@@ -64,6 +64,7 @@ export function Header({ logoText, logoHref, navItems }: HeaderProps) {
           </nav>
         </div>
 
+        <span className="absolute right-14 hidden md:inline text-xs text-muted-foreground/50 select-none">v0.3.1</span>
         <div className="absolute right-4 md:hidden">
           <Sheet>
             <SheetTrigger
