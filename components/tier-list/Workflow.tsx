@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "./Card";
 import { Line } from "./Line";
 import { ImageUpload } from "./ImageUpload";
+import { ensureIdCounter } from "@/lib/idCounter";
 import {
   deleteBlob,
   loadBlob,
@@ -71,6 +72,13 @@ export function Workflow() {
     restoreState(objectUrls.current).then((state) => {
       setRows(state.rows);
       setPool(state.pool);
+      const ids = [
+        ...state.pool,
+        ...state.rows.flatMap((r) => r.items),
+      ]
+        .map((i) => Number(i.id))
+        .filter((n) => !isNaN(n));
+      if (ids.length) ensureIdCounter(Math.max(...ids));
       setLoading(false);
     });
     return () => {

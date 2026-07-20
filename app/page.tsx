@@ -75,41 +75,107 @@ export default function Home() {
     }
   };
 
+  const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect fill='%23222' width='96' height='96'/%3E%3Ctext fill='%23666' font-size='28' x='48' y='58' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
+
+  const [screenshotting, setScreenshotting] = useState(false);
+
   const handleScreenshot = async () => {
     const el = document.getElementById("tier-list");
-    if (!el) return;
+    if (!el || screenshotting) return;
+    setScreenshotting(true);
 
-    const dataUrl = await domtoimage.toPng(el, {
-      bgcolor: "#09090b",
-      scale: 2,
-    });
+    const imageCache = new Map<string, string>();
+    let inFlight = 0;
+    const pending: (() => void)[] = [];
+    const MAX_CONCURRENT = 3;
 
-    const img = new Image();
-    img.onload = () => {
+    const fetchAsDataUrl = async (url: string): Promise<string | null> => {
+      const cached = imageCache.get(url);
+      if (cached) return cached;
+
+      if (inFlight >= MAX_CONCURRENT) {
+        await new Promise<void>((resolve) => pending.push(resolve));
+      }
+      inFlight++;
+
+      const TIMEOUT = 30000;
+
+      const tryFetch = async (input: string): Promise<Blob | null> => {
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), TIMEOUT);
+        try {
+          const res = await fetch(input, { signal: ac.signal });
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          return blob;
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+
+      try {
+        const blob =
+          (await tryFetch(url)) ??
+          (await tryFetch(`https://proxy.cors.sh/${url}`)) ??
+          (await tryFetch(`https://corsproxy.io/?${encodeURIComponent(url)}`));
+
+        if (!blob) return null;
+
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        imageCache.set(url, dataUrl);
+        return dataUrl;
+      } finally {
+        inFlight--;
+        const next = pending.shift();
+        if (next) next();
+      }
+    };
+
+    try {
+      const dataUrl = await domtoimage.toPng(el, {
+        bgcolor: "#09090b",
+        scale: 2,
+        cacheBust: false,
+        httpTimeout: 5000,
+        imagePlaceholder: PLACEHOLDER,
+        requestInterceptor: (url, { type }) => {
+          if (type !== domtoimage.ResourceType.IMAGE || !url.startsWith("http")) return;
+          return fetchAsDataUrl(url) as Promise<string>;
+        },
+      });
+
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject();
+        img.src = dataUrl;
+      });
+
       const canvas = document.createElement("canvas");
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d")!;
-
       ctx.drawImage(img, 0, 0);
-
       ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
       ctx.font = `${Math.round(img.width / 40)}px sans-serif`;
       ctx.textAlign = "right";
       ctx.textBaseline = "bottom";
-      ctx.fillText(
-        "github.com/zoom1fy/tier-list-master",
-        img.width - 16,
-        img.height - 16,
-      );
+      ctx.fillText("github.com/zoom1fy/tier-list-master", img.width - 16, img.height - 16);
 
       const date = new Date().toISOString().slice(0, 10);
       const link = document.createElement("a");
       link.download = `tierlist-master-${date}.png`;
       link.href = canvas.toDataURL();
       link.click();
-    };
-    img.src = dataUrl;
+    } finally {
+      setScreenshotting(false);
+    }
   };
 
   return (
@@ -208,6 +274,19 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={screenshotting}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Creating screenshot</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-6 text-sm text-muted-foreground">
+            <svg className="animate-spin h-8 w-8 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <p>Downloading images and rendering...</p>
+            <p className="text-xs">This may take up to a minute depending on the number of images.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent>

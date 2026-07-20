@@ -5,13 +5,12 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveBlob } from "@/lib/persistence";
+import { nextId } from "@/lib/idCounter";
 import type { TierItem } from "@/types/TierItem";
 
 type ImageUploadProps = {
   onAddItem: (item: TierItem) => void;
 };
-
-let nextId = 100;
 
 export function ImageUpload({ onAddItem }: ImageUploadProps) {
   const [url, setUrl] = useState("");
@@ -62,7 +61,7 @@ export function ImageUpload({ onAddItem }: ImageUploadProps) {
   const handleAdd = async () => {
     if (!preview) return;
 
-    const id = String(nextId++);
+    const id = nextId();
     let blobKey: string | undefined;
 
     if (isFile && fileBlobRef.current) {
